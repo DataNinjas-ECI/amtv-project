@@ -6,7 +6,8 @@ library(factoextra)
 library(lawstat)
 
 data <- read.csv("szbv-lu-2020-2050-tief.csv", sep = ";")
-
+View(data)
+names(data)
 head(data)
 
 # EDA Descriptivo
@@ -26,10 +27,6 @@ ggplot(data, aes(x=tod)) + geom_histogram(bins=30, fill="red", alpha=0.7) +
 ggplot(data, aes(x=swb)) + geom_histogram(bins=30, fill="green", alpha=0.7) + 
   ggtitle("Distribución de la Población Total") + xlab("Población Total") + ylab("Frecuencia")
 
-# Distribución por Edad
-ggplot(data, aes(x=alter)) + geom_histogram(bins=30, fill="orange", alpha=0.7) + 
-  ggtitle("Distribución por Edad") + xlab("Edad") + ylab("Frecuencia")
-
 # Distribuciones de cómo la migración y la inmigración afectan los números de población.
 # Histograma para 'ws'
 ggplot(data, aes(x=ws)) + geom_histogram(binwidth = 1, fill="blue", alpha=0.7) + 
@@ -47,10 +44,6 @@ numeric_vars <- data[, sapply(data, is.numeric)]  # seleccionar solo las variabl
 cor_matrix <- cor(numeric_vars)
 cor_matrix
 corrplot(cor_matrix, method = "circle")
-
-# Tabla de contingencia para sexo y nacionalidad
-sex_nation_table <- table(data$sex, data$nation)
-sex_nation_table
 
 # Gráfico de dispersión para inmigración vs. población al final del año
 # Scatter Plot para 'swb' vs 'ein'
