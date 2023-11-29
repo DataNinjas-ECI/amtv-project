@@ -1,0 +1,135 @@
+---
+title: "Descripción variables"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE} 
+library(lemon)
+library(knitr)
+library(gtools)
+knit_print.data.frame <- lemon_print
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, comment = "") 
+#knitr::opts_chunk$set(render = lemon_print)
+
+#histogram(alta, "jahr")
+```
+
+```{r, echo=FALSE, comment= "", warning=FALSE, include=FALSE}
+knit("/Users/juansebastiabramirezayala/Library/CloudStorage/OneDrive-ESCUELACOLOMBIANADEINGENIERIAJULIOGARAVITO/RSTUDIO_/Funciones/Funciones.Rmd")
+```
+
+# Diccionario 
+
+
+```{r caption="Data frame is now printed using `kable`.",render=lemon_print, echo=FALSE}
+library(DT)
+## Diccionario de varibles en Alemán
+ 
+ metaData <- read_delim("/Users/juansebastiabramirezayala/Library/CloudStorage/OneDrive-ESCUELACOLOMBIANADEINGENIERIAJULIOGARAVITO/RSTUDIO_/AMTV/ProyectoAMTV/Scenarios for population development of the communes of Canton Lucerne/szbv-lu-2020-2050-fields.csv", 
+                                        delim = ";", escape_double = FALSE, trim_ws = TRUE)
+ 
+
+#name <- metaData[,5]
+
+# Traducción diccionario de variables
+
+metaDataTraducido <- data.frame(
+  columnas = c("Jahr", "Kantonsnummer", "Kantonskürzel", "Gemeindenummer", "Gemeindename", "Szenarienvariante", "Alter", "Geschlecht", "Staatsangehörigkeit", "Ausgangsbestand der Bevölkerung", "Geburten", "Todesfälle", "Wanderungssaldo", "Einbürgerungen", "Endbestand der Bevölkerung"),
+  traducciones = c("año", "número de cantón", "abreviatura de cantón", "número de municipio", "nombre de municipio", "versión de escenario", "edad", "género", "nacionalidad", "población inicial", "nacimientos", "defunciones", "saldo migratorio", "nacionalizaciones", "población final"),
+  etiquetas = c(
+  "Año de la actualización",
+  "Número de cantón oficial según la Oficina Federal de Estadística (BFS)",
+  "Matrícula de dos dígitos del cantón",
+  "Número de municipio oficial según la Oficina Federal de Estadística (BFS)",
+  "Nombre de la comunidad",
+  "Versión de la actualización",
+  "Edad del grupo de edad en años",
+  "Género",
+  "Nacionalidad",
+  "Población al 1 de enero",
+  "Número de nacimientos",
+  "Número de defunciones",
+  "Diferencia entre llegadas y salidas",
+  "Número de naturalizaciones",
+  "Población al 31 de diciembre"),
+  longitud_etiqueta = c(
+  "1 Texto de longitud 4",
+  "2 Texto de longitud 2",
+  "3 Texto de longitud 2",
+  "4 Texto de longitud 4",
+  "5 Texto de longitud 30",
+  "6 Texto de longitud 6",
+  "7 Texto de longitud 3",
+  "8 Texto de longitud 1",
+  "9 Texto de longitud 2",
+  "10 Número decimal (positivo)",
+  "11 Número decimal (positivo)",
+  "12 Número decimal (negativo)",
+  "13 Número decimal (positivo o negativo)",
+  "14 Número decimal (positivo o negativo)",
+  "15 Número decimal (positivo)")
+)
+
+# Union de las referencias de variables
+
+meta_D <- cbind(metaData$Field,metaDataTraducido)
+
+meta_D
+```
+
+
+
+
+
+# Información del Registro
+
+El registro en si no describe a un individuo único, sino a un grupo demográfico dentro del municipio de Doppleschwand, caracterizado por ser recién nacidos masculinos en el año 2020. Los otros campos numéricos representarían tasas o cantidades agregadas relacionadas con este grupo específico, como la tasa de nacimientos (geb), muertes (tod), inmigración (ein), y el cambio en la población debido a movimientos espaciales (ws), así como la población estimada al final del año (swb)
+
+
+## jahr
+El año del registro es 2020.
+
+## ktnr
+El número del cantón es 3, que es como un código específico.
+
+## kt
+La abreviatura del cantón es 'LU'.
+
+## gnr
+El número de la comuna o municipio es 1001, identificador.
+
+## gemeinde
+El nombre del municipio o comuna es Doppleschwand.
+
+## variante
+Esto es lo de bajo que se refiere a la proyección y el dataset en sí.
+
+## alter
+La edad del individuo es 0. El valor 0 en alter podría indicar que los datos se refieren a la cohorte de recién nacidos (edad cero) para el año en cuestión (2020).
+
+## sex
+El género es masculino ('m'). 'm' en sex indica que estos son datos específicos para el género masculino.
+
+## nation
+La nacionalidad está representada con la letra 'A', lo cual podría referirse a una categoría específica de nacionalidad o a extranjeros en general, dependiendo de cómo se hayan categorizado los datos.
+
+## swb0
+La población al principio del período (inicio del año) es 0.
+
+## geb
+Los nacimientos ocurridos durante el año se registran como 0.2217614. Este número puede estar normalizado o representar una tasa específica.
+
+## tod
+La cantidad de muertes es -0.001399074. Los valores negativos aquí no son típicos para datos de muerte, el número está representado en términos de una tasa o proporción.
+
+## ws
+El cambio en la población debido a movimientos espaciales es -0.006202249. Al igual que con las muertes, un valor negativo podría representar una pérdida neta de población debido a la migración fuera del área.
+
+## ein
+La inmigración durante el año es -0.0009376800, lo que nuevamente es inusual ser negativo y podría requerir una interpretación similar a 'tod' y 'ws'.
+
+## swb
+La población al final del año es 0.2132224. Este valor podría estar reflejando el resultado neto de nacimientos, muertes y movimientos migratorios durante el año, ajustado posiblemente por una tasa o proporción.
+
