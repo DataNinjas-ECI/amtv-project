@@ -1,0 +1,379 @@
+---
+output: slidy_presentation
+date: "2023-12-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(gridExtra)
+library(tibble)
+library(ggplot2)
+library(tidyverse)
+library(corrplot)
+library(FactoMineR)
+library(factoextra)
+library(lawstat)
+dataalto <- read.csv("C:/Users/Andrea/Downloads/szbv-lu-2020-2050-hoch.csv", sep=";")
+datamedio <- read.csv("C:/Users/Andrea/Downloads/szbv-lu-2020-2050-referenz.csv", sep=";")
+databajo <- read.csv("C:/Users/Andrea/Downloads/szbv-lu-2020-2050-tief.csv", sep=";")
+
+```
+
+## 
+\
+<center>
+<h1> Escenarios de población LUSTAT para el cantón de Lucerna  \h1
+<h3> Juan Camilo Bazurto  
+Juan Sebastián Ramírez  
+Andrea Catalina Mora   \h3
+<h6> Proyecto Final AMTV  \h6  
+<h6> Diciembre 2023 \h6
+\
+\center
+
+
+## <span style="color:blue"> OBJETIVOS </span>
+            
+<center>
+Realizar un análisis exploratorio descriptivo y multivariado de los datos demográficos del Cantón de Lucerna para identificar patrones y tendencias significativas, y agrupar los municipios en clusters basados en características demográficas similares.
+\center
+
+#### <span style="color:blue"> OBJETIVOS ESPECÍFICOS </span>
+
+ Negocio | Datos | EDA | Multivariado | Clustering
+ -- | -- | -- | -- | --
+ Contexto histórico | Adquirirlos, calidad y relevancia | Limpieza y procesamiento | Analizar, caracterizar y visualizar | Correlaciones, independencia y reducción de dimensiones | Evaluar métodos, identificar patrones
+ 
+
+## <span style="color:blue"> CONTEXTO HISTÓRICO </span>
+
+\
+<center>
+El cantón de Lucerna está ubicado entre las regiones de la Meseta suiza (Mitelland) y la Suiza Central (Innerschweiz). Su territorio está distribuido sobre la meseta, los Prealpes suizos y los Alpes uraneses.
+
+</center>
+\
+
+
+\
+<center>
+País: Suiza  
+Municipios: 87  
+Población: 394604  
+</center>
+\
+
+## <span style="color:blue"> PRESENTACIÓN DATA </span>
+\
+<center>
+- Son cálculos de modelos que extrapolan la evolución de la población residente permanente a nivel municipal.  
+- El año en el que se basan los cálculos corresponde al 2021.  
+- La población residente permanente a 31.12.2019 se utiliza como stock inicial para las hipótesis
+</center>
+\
+
+
+## <span style="color:blue"> PRESENTACIÓN DATA </span>
+
+\
+<center>
+Escenarios:
+</center>
+
+- Escenario alto combina hipótesis que favorecen el crecimiento poblacional y económico. Por tanto, se estima que el crecimiento demográfico será mayor que en el escenario medio. (Andrea)  
+- Escenario intermedio (escenario de referencia) tiene en cuenta el supuesto que continúa la evolución demográfica de las últimas décadas. (Sebastián)  
+- Escenario bajo se basa en hipótesis que predicen niveles educativos y crecimiento económico
+conducen menos y, por lo tanto, obstaculizan el crecimiento de la población en comparación con la variante media. (Juan Camilo)  
+
+
+## <span style="color:blue"> EDA (JCB) </span>
+
+### <span style="color:blue"> Gráfica de Natalidad </span>
+### <span style="color:blue"> Grafica de Población Final </span>
+### <span style="color:blue"> Gráfica de Tasa Emigración </span>
+
+
+## <span style="color:blue"> CORRELACIONES </span>
+
+### <span style="color:blue"> Correlación entre población inicial y final a lo largo de los años </span>
+
+```{r}
+dataalto <- data[, c("jahr", "alter", "swb0", "geb", 
+                          "tod", "ws", "ein", "swb")]
+databajo <- data[, c("jahr", "alter", "swb0", "geb", 
+                          "tod", "ws", "ein", "swb")]
+datamedio <- data[, c("jahr", "alter", "swb0", "geb", 
+                          "tod", "ws", "ein", "swb")]
+
+
+# Crear un dataframe de ejemplo (reemplaza esto con tus datos reales)
+set.seed(123)
+
+años_unicos_alta <- unique(dataalto$jahr)
+años_unicos_media <- unique(datamedio$jahr)
+años_unicos_baja <- unique(databajo$jahr)
+
+correlaciones_alta <- numeric(length(años_unicos_alta))
+correlaciones_media <- numeric(length(años_unicos_media))
+correlaciones_baja <- numeric(length(años_unicos_baja))
+
+for (i in seq_along(años_unicos_alta)) {
+  año_actual <- años_unicos_alta[i]
+  subset_data <- subset(dataalto, jahr == año_actual)
+  correlaciones_alta[i] <- cor(subset_data$swb0, subset_data$swb)
+}
+
+for (i in seq_along(años_unicos_media)) {
+  año_actual <- años_unicos_media[i]
+  subset_data <- subset(datamedio, jahr == año_actual)
+  correlaciones_media[i] <- cor(subset_data$swb0, subset_data$swb)
+}
+
+for (i in seq_along(años_unicos_baja)) {
+  año_actual <- años_unicos_baja[i]
+  subset_data <- subset(databajo, jahr == año_actual)
+  correlaciones_baja[i] <- cor(subset_data$swb0, subset_data$swb)
+}
+
+# Crear un dataframe con los datos de correlaciones y años
+df_correlaciones_alta <- data.frame(año = años_unicos_alta, correlacion = 
+                                       correlaciones_alta)
+df_correlaciones_media <- data.frame(año = años_unicos_media, correlacion = 
+                                       correlaciones_media)
+df_correlaciones_baja <- data.frame(año = años_unicos_baja, correlacion = 
+                                       correlaciones_baja)
+
+# Crear el gráfico de líneas
+alta <- ggplot(df_correlaciones_alta, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "ALTA POB.INICIAL VS POB.FINAL",
+       x = "Año",
+       y = "Correlación")
+media <- ggplot(df_correlaciones_media, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "MEDIA POB.INICIAL VS POB.FINAL",
+       x = "Año",
+       y = "Correlación")
+baja <- ggplot(df_correlaciones_baja, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "BAJA POB.INICIAL VS POB.FINAL",
+       x = "Año",
+       y = "Correlación")
+
+grid.arrange(alta, media, baja,  ncol = 1)
+
+```
+
+### <span style="color:blue"> Correlación entre los nacimientos y las defunciones </span>
+
+```{r}
+
+for (i in seq_along(años_unicos_alta)) {
+  año_actual <- años_unicos_alta[i]
+  subset_data <- subset(dataalto, jahr == año_actual)
+  correlaciones_alta[i] <- cor(subset_data$geb, subset_data$tod)
+}
+
+for (i in seq_along(años_unicos_media)) {
+  año_actual <- años_unicos_media[i]
+  subset_data <- subset(datamedio, jahr == año_actual)
+  correlaciones_media[i] <- cor(subset_data$geb, subset_data$tod)
+}
+
+for (i in seq_along(años_unicos_baja)) {
+  año_actual <- años_unicos_baja[i]
+  subset_data <- subset(databajo, jahr == año_actual)
+  correlaciones_baja[i] <- cor(subset_data$geb, subset_data$tod)
+}
+
+# Crear un dataframe con los datos de correlaciones y años
+df_correlaciones_alta <- data.frame(año = años_unicos_alta, correlacion = 
+                                       correlaciones_alta)
+df_correlaciones_media <- data.frame(año = años_unicos_media, correlacion = 
+                                       correlaciones_media)
+df_correlaciones_baja <- data.frame(año = años_unicos_baja, correlacion = 
+                                       correlaciones_baja)
+
+# Crear el gráfico de líneas
+alta <- ggplot(df_correlaciones_alta, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "ALTA NACIMIENTOS VS DEFUNCIONES",
+       x = "Año",
+       y = "Correlación")
+media <- ggplot(df_correlaciones_media, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "MEDIA NACIMIENTOS VS DEFUNCIONES",
+       x = "Año",
+       y = "Correlación")
+baja <- ggplot(df_correlaciones_baja, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "BAJA NACIMIENTOS VS DEFUNCIONES",
+       x = "Año",
+       y = "Correlación")
+
+grid.arrange(alta, media, baja,  ncol = 1)
+
+```
+
+### <span style="color:blue"> Correlación entre saldo migratorio y nacionalizaciones </span>
+
+```{r}
+
+for (i in seq_along(años_unicos_alta)) {
+  año_actual <- años_unicos_alta[i]
+  subset_data <- subset(dataalto, jahr == año_actual)
+  correlaciones_alta[i] <- cor(subset_data$ws, subset_data$ein)
+}
+
+for (i in seq_along(años_unicos_media)) {
+  año_actual <- años_unicos_media[i]
+  subset_data <- subset(datamedio, jahr == año_actual)
+  correlaciones_media[i] <- cor(subset_data$ws, subset_data$ein)
+}
+
+for (i in seq_along(años_unicos_baja)) {
+  año_actual <- años_unicos_baja[i]
+  subset_data <- subset(databajo, jahr == año_actual)
+  correlaciones_baja[i] <- cor(subset_data$ws, subset_data$ein)
+}
+
+# Crear un dataframe con los datos de correlaciones y años
+df_correlaciones_alta <- data.frame(año = años_unicos_alta, correlacion = 
+                                       correlaciones_alta)
+df_correlaciones_media <- data.frame(año = años_unicos_media, correlacion = 
+                                       correlaciones_media)
+df_correlaciones_baja <- data.frame(año = años_unicos_baja, correlacion = 
+                                       correlaciones_baja)
+
+# Crear el gráfico de líneas
+alta <- ggplot(df_correlaciones_alta, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "ALTA MIGRACIONES VS NACIONALIZACIONES",
+       x = "Año",
+       y = "Correlación")
+media <- ggplot(df_correlaciones_media, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "MEDIA MIGRACIONES VS NACIONALIZACIONES",
+       x = "Año",
+       y = "Correlación")
+baja <- ggplot(df_correlaciones_baja, aes(x = año, y = correlacion)) +
+  geom_line() +
+  labs(title = "BAJA MIGRACIONES VS NACIONALIZACIONES",
+       x = "Año",
+       y = "Correlación")
+
+grid.arrange(alta, media, baja,  ncol = 1)
+
+```
+
+
+##
+
+### <span style="color:blue"> test de independencia </span>
+
+A continuación se muestran las matrices por escenario con el valor de la correlación y el p-valor:  
+
+<span style="color:blue"> **Alta** </span> 
+
+```{r}
+
+variables <- colnames(dataalto)
+
+matrix_result <- matrix(0, nrow = length(variables), ncol = length(variables))
+
+rownames(matrix_result) <- variables
+colnames(matrix_result) <- variables
+
+diag(matrix_result) <- 1
+
+for (i in 1:(length(variables)-1)) {
+  for (j in (i+1):length(variables)) {
+    cor_test_result <- cor.test(dataalto[[variables[i]]], dataalto[[variables[j]]])
+    
+    matrix_result[j, i] <- round(cor_test_result$estimate, 3)
+
+    matrix_result[i, j] <- round(cor_test_result$p.value, 3)
+  }
+}
+
+print(matrix_result)
+
+```
+
+<span style="color:blue"> **Media** </span>
+
+```{r}
+
+variables <- colnames(datamedio)
+
+matrix_result <- matrix(0, nrow = length(variables), ncol = length(variables))
+
+rownames(matrix_result) <- variables
+colnames(matrix_result) <- variables
+
+diag(matrix_result) <- 1
+
+for (i in 1:(length(variables)-1)) {
+  for (j in (i+1):length(variables)) {
+    cor_test_result <- cor.test(datamedio[[variables[i]]], datamedio[[variables[j]]])
+    
+    matrix_result[j, i] <- round(cor_test_result$estimate, 3)
+
+    matrix_result[i, j] <- round(cor_test_result$p.value, 3)
+  }
+}
+
+print(matrix_result)
+
+```
+
+
+<span style="color:blue"> **Baja** </span>
+
+```{r}
+
+variables <- colnames(databajo)
+
+matrix_result <- matrix(0, nrow = length(variables), ncol = length(variables))
+
+rownames(matrix_result) <- variables
+colnames(matrix_result) <- variables
+
+diag(matrix_result) <- 1
+
+for (i in 1:(length(variables)-1)) {
+  for (j in (i+1):length(variables)) {
+    cor_test_result <- cor.test(databajo[[variables[i]]], databajo[[variables[j]]])
+    
+    matrix_result[j, i] <- round(cor_test_result$estimate, 3)
+
+    matrix_result[i, j] <- round(cor_test_result$p.value, 3)
+  }
+}
+
+print(matrix_result)
+
+```
+
+
+## <span style="color:blue"> REDUCCIÓN DE DIMENSIONES </span>
+
+<span style="color:blue"> ACP </span>
+
+
+
+<span style="color:blue"> AF </span>
+
+## <span style="color:blue"> CLUSTERING </span>
+
+<span style="color:blue"> individual </span>
+
+<span style="color:blue"> junto </span>
+
+## <span style="color:blue"> CONCLUSIONES </span>
+
+## <span style="color:blue"> <h1>  GRACIAS </h1> </span>
+
