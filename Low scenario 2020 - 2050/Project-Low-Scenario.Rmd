@@ -1,0 +1,207 @@
+---
+title: "Escenarios de desarrollo demográfico de los municipios del cantón de Lucerna"
+author: "Juan Camilo Bazurto"
+date: "2023-11-23"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(corrplot)
+library(FactoMineR)
+library(factoextra)
+library(lawstat)
+```
+
+## Descripción
+
+Los escenarios de población LUSTAT para el cantón de Lucerna son cálculos de modelos que extrapolan la evolución de la población residente permanente a nivel municipal. Se han calculado tres variantes para cada escenario, que difieren en las hipótesis subyacentes. Tienen en cuenta las hipótesis del modelo basadas en las tendencias demográficas y socioeconómicas de las últimas décadas. El año de cálculo de las ratios en los que se basan los cálculos corresponde al año 2021. La población residente permanente a 31.12.2019 se utiliza como stock inicial para las hipótesis.
+
+# Escenario bajo 2020 - 2050
+## Descripción
+El escenario bajo se basa en hipótesis que impulsan menos el nivel educativo y el crecimiento económico, reduciendo así el crecimiento de la población en comparación con el escenario de referencia.
+
+## Carga de Datos
+Cargamos los datos demográficos del archivo CSV proporcionado.
+
+```{r read csv}
+data <- read.csv("szbv-lu-2020-2050-tief.csv", sep = ";")
+head(data)
+```
+
+## Análisis Exploratorio de Datos (EDA)
+Realizamos un resumen estadístico y contamos los datos faltantes.
+
+```{r eda descriptivo}
+# Resumen estadístico de data
+summary(data)
+
+# Contar datos faltantes por variable
+sum(is.na(data))
+```
+
+## Visualización de Distribuciones
+Generamos histogramas para nacimientos, muertes y la distribución de la población total.
+
+### Distribución de Nacimientos (geb):
+
+```{r distribucion nacimientos, echo=FALSE}
+# Distribución de Nacimientos
+ggplot(data, aes(x=geb)) + geom_histogram(bins=30, fill="blue", alpha=0.7) + 
+  ggtitle("Distribución de Nacimientos") + xlab("Nacimientos") + ylab("Frecuencia")
+```
+
+Esta gráfica muestra una concentración extrema de los datos en el extremo inferior de nacimientos, lo que sugiere que hay una gran cantidad de áreas con tasas de nacimiento muy bajas. La presencia de barras altas cerca del valor cero podría indicar poblaciones pequeñas o tasas de natalidad bajas en la mayoría de las áreas.
+
+### Distribución de Muertes (tod):
+
+```{r distribucion muertes, echo=FALSE}
+# Distribución de Muertes
+ggplot(data, aes(x=tod)) + geom_histogram(bins=30, fill="red", alpha=0.7) + 
+  ggtitle("Distribución de Muertes") + xlab("Muertes") + ylab("Frecuencia")
+```
+
+Esta grafica representa las muertes, muestra una anomalía con valores negativos, lo cual no es posible en términos reales.
+
+### Distribución de la Población Total (swb):
+
+```{r distribucion poblacion total, echo=FALSE}
+# Distribución de la Población Total
+ggplot(data, aes(x=swb)) + geom_histogram(bins=30, fill="green", alpha=0.7) + 
+  ggtitle("Distribución de la Población Total") + xlab("Población Total") + ylab("Frecuencia")
+```
+
+Esta gráfica muestra que la mayoría de los valores de población están concentrados en el extremo inferior, lo que indica que la mayoría de los municipios tienen poblaciones pequeñas, mientras que unos pocos tienen poblaciones mucho más grandes.
+
+### Distribución por Edad (alter):
+
+```{r distribucion edad, echo=FALSE}
+# Distribución por Edad
+ggplot(data, aes(x=alter)) + geom_histogram(bins=30, fill="orange", alpha=0.7) + 
+  ggtitle("Distribución por Edad") + xlab("Edad") + ylab("Frecuencia")
+
+```
+
+Esta gráfica muestra una distribución uniforme de la población por edades, con barras relativamente iguales a través de todas las edades. Esto puede sugerir que la población está distribuida de manera uniforme entre diferentes grupos de edad.
+
+
+## Análisis Multivariado
+Evaluamos correlaciones y generamos gráficos de dispersión.
+
+```{r analisis multivariado, echo=FALSE}
+# Matriz de correlación
+numeric_vars <- data[, sapply(data, is.numeric)]
+cor_matrix <- cor(numeric_vars)
+cor_matrix
+corrplot(cor_matrix, method = "circle")
+```
+
+Las correlaciones entre jahr (año) y las demás variables son cercanas a cero, lo que indica que no hay una relación lineal entre el tiempo y las demás variables demográficas.
+La correlación entre swb0 (población al comienzo del año) y swb (población al final del año) es muy alta (aproximadamente 0.996), lo que es esperable ya que son mediciones de población en diferentes momentos.
+ein (inmigración durante el año) tiene una correlación moderada con swb0 y swb, lo que sugiere que la inmigración tiene un impacto medible en la población.
+Las correlaciones entre ws (movimientos espaciales) y otras variables son generalmente bajas, aunque hay una correlación negativa moderada con ein, posiblemente indicando que los movimientos espaciales y la inmigración pueden ser fenómenos opuestos o que se regulan mutuamente.
+Las correlaciones entre tod (muertes) y alter (edad) son negativas y moderadas, lo que podría reflejar que las muertes se registran de manera más frecuente en edades avanzadas.
+
+### Población al Final del Año vs Inmigración:
+
+```{r analisis multivariado swb vs. ein, echo=FALSE}
+# Gráficos de dispersión
+ggplot(data, aes(x=swb, y=ein)) + geom_point(alpha=0.6) + 
+  ggtitle("Población al Final del Año vs Inmigración") +
+  xlab("Población al Final del Año") + ylab("Inmigración")
+```
+
+El diagrama de dispersión muestra una amplia dispersión de puntos, lo que indica una variabilidad significativa en la relación entre la población al final del año y la inmigración. No parece haber una correlación clara, lo que sugiere que la inmigración no es el único factor que influye en la población al final del año.
+
+### Población al Final del Año vs Cambio por Movimientos Espaciales:
+
+```{r analisis multivariado swb vs. ws, echo=FALSE}
+ggplot(data, aes(x=swb, y=ws)) + geom_point(alpha=0.6, color="red") + 
+  ggtitle("Población al Final del Año vs Cambio por Movimientos Espaciales") +
+  xlab("Población al Final del Año") + ylab("Movimientos Espaciales")
+```
+
+Esta gráfica muestra una tendencia dispersa con algunos puntos alejados de la mayoría, lo que indica algunos casos con cambios significativos en la población debido a movimientos espaciales. La mayoría de los puntos están concentrados horizontalmente, indicando que, para la mayoría de las áreas, los movimientos espaciales no tienen un gran impacto en la población al final del año.
+
+### Gráfico de Dispersión (nacimientos vs. movimientos espaciales):
+
+```{r analisis multivariado ws vs. geb, echo=FALSE}
+# Gráfico de dispersión para nacimientos vs. movimientos espaciales
+ggplot(data, aes(x = ws, y = geb)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  ggtitle("Relación entre Nacimientos y Movimientos Espaciales") +
+  xlab("Movimientos Espaciales") +
+  ylab("Nacimientos")
+```
+
+Esta gráfica muestra una concentración de puntos a lo largo del eje de los movimientos espaciales en cero, con varios valores atípicos, especialmente en la dirección negativa. Existe una agrupación de valores altos de nacimientos que no parecen tener una correspondencia clara con los movimientos espaciales, lo que indica que los nacimientos altos no están necesariamente vinculados con los movimientos espaciales significativos.
+
+## Interpretación General:
+Las relaciones lineales entre las variables demográficas son generalmente débiles, excepto por la relación esperada entre las medidas de población al comienzo y al final del año.
+Los datos parecen estar estructurados de manera equilibrada en términos de sexo y nacionalidad, lo que es útil para análisis que no quieren ser influenciados por estas variables.
+Los resultados sugieren que la inmigración tiene un impacto más directo en la población que los movimientos espaciales, aunque el efecto de la inmigración no es extremadamente fuerte.
+
+## Análisis de Componentes Principales (PCA)
+Realizamos PCA para reducir la dimensionalidad y agrupar los municipios.
+
+### Gráfico del PCA de Variables:
+
+```{r pca, echo=FALSE}
+# Aplicación del PCA
+set.seed(123)
+data_sample <- numeric_vars[sample(nrow(numeric_vars), 10000), ]
+res.pca <- PCA(data_sample, ncp = 5, scale.unit=TRUE)
+```
+
+Las variables swb y swb0 (población al comienzo y al final del año, respectivamente) están alineadas en la misma dirección en el primer componente principal, lo que sugiere que ambas contribuyen de manera similar a la variación en los datos y están fuertemente correlacionadas, como se esperaba.
+Las variables ws (movimientos espaciales) y ein (inmigración) parecen estar en direcciones opuestas, lo que podría sugerir que los movimientos espaciales internos y la inmigración tienen efectos opuestos en los componentes principales.
+tod (muertes) parece estar orientada en una dirección diferente a la mayoría de las variables demográficas, lo que indica que podría estar mostrando un patrón distinto de variación.
+
+### Scree Plot (Gráfico de Varianza Explicada):
+
+```{r pca scree plot, echo=FALSE}
+# Visualización de PCA
+fviz_eig(res.pca)
+```
+
+El gráfico de varianza explicada muestra que las primeras dos dimensiones tienen la mayor parte de la varianza, esto indica que podrían ser suficientes para resumir la mayoría de la información en los datos.
+
+
+```{r pca biplot, echo=FALSE}
+fviz_pca_biplot(res.pca, repel = TRUE)
+```
+
+### PCA - Biplot:
+El biplot muestra la relación entre las variables y los individuos en el espacio de los dos primeros componentes principales. Parece haber una gran dispersión de los individuos, lo que indica diversidad en las características demográficas dentro del conjunto de datos.
+
+
+```{r pca optimal n clusters, echo=FALSE}
+# Determinación del número óptimo de clusters
+fviz_nbclust(data_sample, FUN = hcut, method = "wss")
+```
+
+### Gráfico del Número Óptimo de Clusters:
+El método del codo sugiere que hay un punto de inflexión en el gráfico, lo que podría usarse para determinar el número óptimo de clusters. No hay un 'codo' muy definido, pero se podria elegir un número de clusters basado en el punto donde la disminución en la suma de cuadrados dentro del grupo se estabiliza.
+
+
+```{r pca cluster, echo=FALSE}
+# Clasificación jerárquica
+set.seed(123)
+res.hcpc <- HCPC(res.pca, nb.clust = -1, graph = FALSE)
+fviz_cluster(res.hcpc, data = data_sample)
+```
+
+### Gráfico de Clusters:
+Los clusters identificados por la Clasificación Jerárquica sobre Componentes Principales (HCPC) parecen ser distintos y bien separados en el espacio de las dos primeras dimensiones principales. Cada cluster podría representar diferentes perfiles demográficos en los municipios del Cantón de Lucerna.
+
+#### Distribución en el Espacio de Componentes Principales:
+El cluster rojo está más concentrado y parece estar separado del resto, especialmente en la dirección del componente principal 2 (Dim2), lo que sugiere diferencias significativas en las variables que más influyen en este componente.
+Los clusters verde y azul muestran una superposición parcial, lo que podría indicar similitudes en ciertas características demográficas entre estos dos grupos, aunque aún mantienen su distinción.
+
+#### Interpretación de Componentes:
+El eje horizontal (Dim1), que explica el 22.3% de la variabilidad, podría estar relacionado con factores como la población total o la tasa de natalidad, ya que estas variables a menudo explican una gran proporción de la variabilidad en los datos demográficos.
+El eje vertical (Dim2), que explica el 14.1% de la variabilidad, podría estar capturando otros aspectos como la edad, la mortalidad o la migración, que también son importantes en el análisis demográfico.
